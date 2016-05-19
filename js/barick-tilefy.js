@@ -1,24 +1,33 @@
 /*!
- * barick-tilify v1.0.0 (https://github.com/codotronix/barick-tilify)
+ * barick-tilefy v1.0.0 (https://github.com/codotronix/barick-tilefy)
  * Copyright 2016 Suman Barick
  * Licensed under the MIT license
  */
 
-//So that plugin scripts are cached....
-//$.ajaxSetup({
-//  cache: true
-//});
+
+/*
+*
+* tilefy(config) takes the config object, Where,
+*
+* config.TD = (Required) Tile Descriptor JSON, containing tileOrder array and tiles object
+* config.btn_ID_to_Toggle_Tile_Movement = (Optional) id of a button/element to bind the toggle tile move event
+* config.btn_ID_to_Toggle_Tile_Resize = (Optional) id of a button/element to bind the toggle tile resize
+* config.gridCapacityPerRow = (Optional) total number of smallest tile a row should hold
+*
+*/
 
 var tile_plugins = {};
 
-(function($) {    
-    $.fn.tilify = function(TM, btn_toggleTileDnD, btn_toggleTileResize) {
+(function($) {
+    
+    $.fn.tilefy = function(config) {
         
         return this.each(function() { //ANONYM FUNC_1 START
+        var thisContainer = this;
             var container = $(this);
             var containerWidth = container.width();
-            var tileOrder = TM.tileOrder,             //The order in which tiles should be drawn
-            tiles = TM.tiles,
+            var tileOrder = config.TD.tileOrder,             //The order in which tiles should be drawn
+            tiles = config.TD.tiles,
             grids = {},                 //grids are smallest square unit of a tile, 1 grid = 1 small tile
             gridsPerRow = 0,            //no of grids in a row
             page_Width_Class = 'xs',    // possible values = xs, sm, md, lg
@@ -38,7 +47,7 @@ var tile_plugins = {};
             
             function init () {
                 calculateWidths();
-                noBigTileInXS();
+                //noBigTileInXS();
                 makeGrids();        
                 mapTilesToGrid();
                 drawTiles();
@@ -48,7 +57,7 @@ var tile_plugins = {};
                 enableTileResize();
             }
             
-            function reTilify () {
+            function reTilefy () {
                 resetGrids();
                 mapTilesToGrid();
                 drawTiles();
@@ -57,21 +66,21 @@ var tile_plugins = {};
             
             
             /*
-            * This function will make the Full HTML and put them in container on which tilify was called
+            * This function will make the Full HTML and put them in container on which tilefy was called
             */
             function drawTiles () {
                 var htm = '';
-                container.addClass('tiles-container ' + page_Width_Class);
+                container.addClass('barick-tiles-container ' + page_Width_Class);
                 var tile;
                 for(var i in tiles) {
                     tile = tiles[i];
                     htm += '<div id="' +tile.id+ '" class="tile ' + tile.size + '" style="top:' + tile.top + 'px; left:' +tile.left+ 'px;" data-gridid="' +tile.gridId+ '" >'
                                 + '<a class="tileInnerContainer" target="_blank" href="' +(tile.link || 'javascript:void(0)')+ '" style="background: ' +tile.bgColor+ ';" >';
                     
-                    if (tile.iconType == 'font') {
+                    if (tile.contentType == 'font') {
                         htm += '<span class="fontIcon ' +tile.icon+ '"></span>';
                     }
-                    else if (tile.iconType == 'live') {
+                    else if (tile.contentType == 'live') {
                         htm += '<div class="live">';
                             
                         if (tile.liveImgUrls != undefined) {
@@ -84,7 +93,7 @@ var tile_plugins = {};
                         
                         htm += '</div>';
                     }
-                    else if (tile.iconType == 'plugin') {
+                    else if (tile.contentType == 'plugin') {
                         htm += '<div class="plugin"></div>';
                     }
                     
@@ -102,7 +111,7 @@ var tile_plugins = {};
                 }
                 
                 //add the clearSpaceDiv
-                htm += '<div style="position:absolute; left: 10px; right: 10px; height: 80px; top: ' +(clearSpaceDivPosition + 50) + 'px" ></div>';
+                htm += '<div style="position:absolute; left: 10px; right: 10px; height: 60px; top: ' +(clearSpaceDivPosition) + 'px" ></div>';
                 
                 container.html(htm);
                 
@@ -116,7 +125,7 @@ var tile_plugins = {};
             function loadPlugins () {
                 //console.log('inside loadPlugins');
                 for (var i in tiles) {
-                    if(tiles[i].iconType == 'plugin') {
+                    if(tiles[i].contentType == 'plugin') {
                         
 //                        console.log('outside timeout callback '+pathToPlugin);
 //                        setTimeout(function(){
@@ -253,28 +262,30 @@ var tile_plugins = {};
                 var tiles_Container_width = containerWidth - scrollBarWidth;
                 page_Width_Class = 'xs';
                 var all_Possible_Width_Classes = 'xs sm md lg';        
-                gridsPerRow = 12;
+                gridsPerRow = config.gridCapacityPerRow || 12;
                 small_tile_size = Math.floor(tiles_Container_width / gridsPerRow);        
 
                 if (tiles_Container_width >= 1200) {            
                     page_Width_Class = 'lg';
-                    gridsPerRow = 16;
+                    gridsPerRow = config.gridCapacityPerRow || 16;
                     small_tile_size = Math.floor(tiles_Container_width / gridsPerRow);
                 } 
                 else if (tiles_Container_width >= 992) {
                     page_Width_Class = 'md';
+                    gridsPerRow = config.gridCapacityPerRow || 12;
                 } 
                 else if (tiles_Container_width >= 768) {
-                    page_Width_Class = 'sm';            
+                    page_Width_Class = 'sm';
+                    gridsPerRow = config.gridCapacityPerRow || 12;
                 } 
                 else {
                     page_Width_Class = 'xs';   
-                    gridsPerRow = 4;
+                    gridsPerRow = config.gridCapacityPerRow || 4;
                     small_tile_size = Math.floor((tiles_Container_width + scrollBarWidth) / gridsPerRow);
                 }
 
                 medium_tile_size = small_tile_size * 2;
-                big_tile_size = medium_tile_size * 2;
+                big_tile_size = small_tile_size * 4;
             }
 
             /*
@@ -367,11 +378,11 @@ var tile_plugins = {};
                     tiles[tileID].bgColor = tiles[tileID].bgColor || colorCodes[Math.floor(Math.random()*colorCodes.length)];
                     tiles[tileID].top = grids[gridId].top;
                     tiles[tileID].left = grids[gridId].left;
-
+                    //console.log('top='+tiles[tileID].top+" ... height="+tiles[tileID].height+" total="+(tiles[tileID].top+tiles[tileID].height));
                     clearSpaceDivPosition = ((tiles[tileID].top+tiles[tileID].height) > clearSpaceDivPosition) ? (tiles[tileID].top+tiles[tileID].height) : clearSpaceDivPosition; 
                 }
 
-                //TM.clearSpaceDivPosition = clearSpaceDivPosition;
+                //config.TD.clearSpaceDivPosition = clearSpaceDivPosition;
             }
 
             /*
@@ -466,7 +477,8 @@ var tile_plugins = {};
                 
                 
                 //whenever a tile recieves a mousedown, assume dragging start
-                $('body').on('pointerdown', '.movementMode .tile', function(ev){ //console.log('drag start');console.log(ev);
+                container.on('pointerdown', '.tile', function(ev){ //console.log('drag start');console.log(ev);
+                    if(!container.hasClass('movementMode')) {return;}
 //                    ev.stopPropagation();
                     ev.preventDefault();
                     if(drag_in_progress) {return;}
@@ -475,7 +487,7 @@ var tile_plugins = {};
                     drag_in_progress = true;
                     iniMX = ev.pageX;
                     iniMY = ev.pageY;
-                    $('.tile').removeClass('being-dragged');
+                    container.find('.tile').removeClass('being-dragged');
                     $(this).addClass('being-dragged');
                 });
                 
@@ -514,11 +526,16 @@ var tile_plugins = {};
                         }                        
                     }
                     
-                    reTilify();                    
+                    reTilefy();                    
                     
                     tile_Being_Dragged_ID = null;
                     tile_to_be_shifted_ID = null;
                     $('.tile').removeClass('being-dragged');
+                });
+                
+                //if the pointer goes out of current tile container, trigger a pointerup
+                container.on('pointerout', function(ev) {
+                   $('body').trigger('pointerup');
                 });
                 
                 //while dragging the tile should move with mouse
@@ -542,7 +559,7 @@ var tile_plugins = {};
                     for (var i in tiles) {
                         if(tile_Being_Dragged_ID != tiles[i].id && Math.abs(tiles[i].left - tileLeft) < small_tile_size && Math.abs(tiles[i].top - tileTop) < small_tile_size) {
                             //console.log(tiles[i].id + " can be moved...");
-                            $('.tile').removeClass('shift-effect');
+                            container.find('.tile').removeClass('shift-effect');
                             tile_to_be_shifted_ID = tiles[i].id;
                             $('#' + tile_to_be_shifted_ID).addClass('shift-effect');
                             break;
@@ -556,25 +573,25 @@ var tile_plugins = {};
                     });
                 });
                 
-                $('#'+btn_toggleTileDnD).on('click', function(){
+                $('#'+config.btn_ID_to_Toggle_Tile_Movement).on('click', function(){
                     checkTileDNDPermission();
                 });
                 
                 //first tie it doesnot have any of the classes off/on, so it will set to off
                 function checkTileDNDPermission () {
                     $('.tileResizeMenu').remove();
-                    if($('#'+btn_toggleTileDnD).hasClass('off')) {
-                        $('#'+btn_toggleTileDnD).removeClass('off').addClass('on');
+                    if(!$('#'+config.btn_ID_to_Toggle_Tile_Movement).hasClass('on')) {
+                        $('#'+config.btn_ID_to_Toggle_Tile_Movement).removeClass('off').addClass('on');
                         tileMovementAllowed = true;
                         container.addClass('movementMode').removeClass('resizeMode');
                         //tile resize and movement are mutually exclusive
                         tileResizeAllowed = false;
-                        $('#'+btn_toggleTileResize).removeClass('on').addClass('off');
+                        $('#'+config.btn_ID_to_Toggle_Tile_Resize).removeClass('on').addClass('off');
                     } else {
-                        $('#'+btn_toggleTileDnD).removeClass('on').addClass('off');
+                        $('#'+config.btn_ID_to_Toggle_Tile_Movement).removeClass('on').addClass('off');
                         tileMovementAllowed = false;
                         container.removeClass('movementMode');
-                        reTilify(); //to correct any anomaly during tile movement
+                        reTilefy(); //to correct any anomaly during tile movement
                     }
                 }
                 
@@ -584,21 +601,21 @@ var tile_plugins = {};
             
             
             /*
-            * This function enables tile resize, and binds it to btn_toggleTileResize
+            * This function enables tile resize, and binds it to config.btn_ID_to_Toggle_Tile_Resize
             */
             function enableTileResize () {
                 function checkTileResizePermission () {
                     $('.tileResizeMenu').remove();
-                    if($('#'+btn_toggleTileResize).hasClass('off')) {
-                        $('#'+btn_toggleTileResize).removeClass('off').addClass('on');
+                    if(!$('#'+config.btn_ID_to_Toggle_Tile_Resize).hasClass('on')) {
+                        $('#'+config.btn_ID_to_Toggle_Tile_Resize).removeClass('off').addClass('on');
                         tileResizeAllowed = true;
                         container.addClass('resizeMode').removeClass('movementMode');
                         //tile resize and movement are mutually exclusive
                         tileMovementAllowed = false;
-                        $('#'+btn_toggleTileDnD).removeClass('on').addClass('off');
-                        reTilify(); //to correct any anomaly during tile movement
+                        $('#'+config.btn_ID_to_Toggle_Tile_Movement).removeClass('on').addClass('off');
+                        reTilefy(); //to correct any anomaly during tile movement
                     } else {
-                        $('#'+btn_toggleTileResize).removeClass('on').addClass('off');
+                        $('#'+config.btn_ID_to_Toggle_Tile_Resize).removeClass('on').addClass('off');
                         tileResizeAllowed = false;
                         container.removeClass('resizeMode');
                     }
@@ -607,7 +624,7 @@ var tile_plugins = {};
                 //Initial / first time check, comment this out if first time on/off class is given in html
                 //checkTileResizePermission();
                 
-                $('#'+btn_toggleTileResize).on('click', function(){
+                $('#'+config.btn_ID_to_Toggle_Tile_Resize).on('click', function(){
                     checkTileResizePermission();
                 });
                 
@@ -620,7 +637,8 @@ var tile_plugins = {};
                                     +'</ul>';
                 
                 //click on tile to open resize menu
-                $('body').on('click', '.resizeMode .tile', function(ev){
+                container.on('click', '.tile', function(ev){
+                    if(!container.hasClass('resizeMode')) {return;}
                     $('.tileResizeMenu').remove();
                     var top = parseInt($(this).css('top')) + 20;
                     var left = parseInt($(this).css('left')) + 20;
@@ -633,14 +651,14 @@ var tile_plugins = {};
                 
                 
                 //click on a size to resize tile
-                $('body').on('click', '.tileResizeMenu li', function (ev) {
+                container.on('click', '.tileResizeMenu li', function (ev) {
                     var chosenSize = $(this).text().toLowerCase();
                     var tileID = $(this).closest('.tileResizeMenu').attr('data-tileID');
                     
                     //resize only if a different size is chosen
                     if(tiles[tileID].size != chosenSize) {
                         tiles[tileID].size = chosenSize;
-                        reTilify();
+                        reTilefy();
                     }
                 });
                 
@@ -658,5 +676,5 @@ var tile_plugins = {};
             
             
         }); //ANONYM FUNC_1 END
-    }   //END OF TILIFY
+    }   //END OF Tilefy
 }(jQuery));

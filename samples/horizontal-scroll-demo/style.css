@@ -1,0 +1,86 @@
+body {
+    background-image: url("../../img/Wallpapers/dock-1030837_1280.jpg");
+    background-repeat:no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+/*    background: blue;*/
+    color: #FFF;
+    width: 2040px;
+}
+
+.pageHeader {
+    padding: 0 30px;
+}
+
+.group {
+    position: absolute;
+/*    border: 1px solid #FFF;*/
+    width: 600px;
+    height: 100%;
+    overflow: auto;
+    display: inline-block;
+}
+
+.groupTitle {
+    margin: 10px;
+    color: #3C52A9;
+    display: inline-block;
+}
+
+#sec1 {
+    left: 40px;
+}
+
+#sec2 {
+    left: 700px;
+}
+
+#sec3 {
+    left: 1380px;
+}
+
+.btnPane {
+    margin-left: 30px;
+    display: inline-block;
+    width: 155px;
+    position: relative;
+}
+
+.btnPane.btnResize {
+    width: 120px;
+}
+
+.btnPane .btnFor {
+    font-size: 20px;
+    color: #000;
+}
+
+.toggleBtn {
+    width: 60px;
+    height: 25px;
+    background: #000;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.toggleBtn span {
+    height: 19px;
+    width: 28px;
+    background: #F00;
+    display: inline-block;
+    position: relative;
+    left: 4px;
+    top: 3px;
+    transition: all .2s ease;
+}
+
+.on .toggleBtn span {
+    left: 28px;
+    background: greenyellow;
+}
+
+
+
+

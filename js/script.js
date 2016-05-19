@@ -1,7 +1,14 @@
 $(function(){    
-    $.getJSON('data/TM.json', function(res){
-        $('#tilesContainer').tilify(res, 'btn_toggleTileDnD', 'btn_toggleTileResize');
-    })
+    $.getJSON('data/TD.json', function(res){
+        var config = {};
+        config.TD = res;
+        config.btn_ID_to_Toggle_Tile_Movement = 'btn_toggleTileDnD';
+        config.btn_ID_to_Toggle_Tile_Resize = 'btn_toggleTileResize';
+        //config.gridCapacityPerRow = 20;   //let's comment it out, becoz it's optional      
+        
+        $('#tilesContainer').tilefy(config);
+        //$('#tilesContainer').tilefy(res, 'btn_toggleTileDnD', 'btn_toggleTileResize');
+    });
     
     $('#startBtn').click(function(ev){
         ev.stopPropagation();
